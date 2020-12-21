@@ -1,5 +1,232 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd"></mule>
+<mule xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:mongo="http://www.mulesoft.org/schema/mule/mongo" xmlns:mft-config-sapi="http://www.mulesoft.org/schema/mule/mft-config-sapi" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/mft-config-sapi http://www.mulesoft.org/schema/mule/mft-config-sapi/current/mule-mft-config-sapi.xsd
+http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd">
+    <http:listener-config name="mft-job-papi-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="mft-job-papi-config" api="resource::f8c4f898-332d-4206-b97a-29fc1ce40100:mft-job-papi:1.0.0:raml:zip:mft-job-papi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+	<flow name="mft-job-papi-main">
+        <http:listener config-ref="mft-job-papi-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="mft-job-papi-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="mft-job-papi-console">
+        <http:listener config-ref="mft-job-papi-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="mft-job-papi-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="put:\jobs\(id)\tasks\(task-id):application\json:mft-job-papi-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+                <ee:set-variable variableName="task-id">attributes.uriParams.'task-id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="put:\jobs\(id)\tasks\(task-id):application\json:mft-job-papi-config" />
+    </flow>
+    <flow name="get:\jobs\(id)\tasks\(task-id):application\json:mft-job-papi-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+                <ee:set-variable variableName="task-id">attributes.uriParams.'task-id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <logger level="INFO" message="get:\jobs\(id)\tasks\(task-id):application\json:mft-job-papi-config" />
+    </flow>
+	<flow name="post:\jobs\(id)\tasks:mft-job-papi-config">
+        <choice doc:name="Choice" doc:id="41774305-91a0-49a8-a8d9-8d6ee731315f" >
+			<when expression="#[payload.job?]">
+				<mongo:insert-document collectionName="mft-tasks" doc:name="Insert document" doc:id="50c34902-301d-4f7f-aa6f-5e4a17bba795" config-ref="MongoDB_Config">
+			<mongo:document><![CDATA[#[output application/json
+---
+{
+	(payload - "status" - "created" - "started" - "finished"),
+	status: "PENDING",
+	created: now() as String
+}]]]></mongo:document>
+		</mongo:insert-document>
+				<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"id": payload.'_id'.'\$oid',
+	"href": "/jobs/$(vars.id)/tasks/$(payload.'_id'.'\$oid')"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="vars.id" doc:id="1666a0ac-b974-4a82-88c3-4ead284649c8">
+					<ee:variables>
+						<ee:set-variable variableName="id"><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<flow-ref doc:name="create-job-task" doc:id="045a9ae1-3a07-46c3-9d9c-ca1608f4687a" name="create-job-task" />
+			</otherwise>
+		</choice>
+    </flow>
+	<flow name="post:\jobs\(id):mft-job-papi-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:name="vars.id">
+            <ee:variables>
+                <ee:set-variable variableName="id">attributes.uriParams.'id'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+		<flow-ref doc:name="create-job-task" doc:id="fbde59d1-e3ff-4f3c-a8f4-16216e894ef8" name="create-job-task"/>
+    </flow>
+	<sub-flow name="create-job-task" doc:id="6dd9f422-ed4b-4ac4-8143-f7b6e551943b">
+		<mft-config-sapi:get-job-by-id doc:name="Get job by id" doc:id="2558142d-6161-4bef-8728-5910b305c2cb" config-ref="MFT_Config_SAPI_Config" id="#[vars.id]" client-id="${secure::mft.config.client_id}" client-secret="${secure::mft.config.client_secret}" target="job" />
+		<set-variable value="#[[
+	vars.job.inboundSystem.id,
+	(vars.job.outboundSystem.id) if (vars.job.outboundSystem? and vars.job.outboundSystem != null)
+] distinctBy $]" doc:name="systems" doc:id="f26a7275-1cc1-4878-b564-5dd588dd47f2" variableName="systems" />
+		<set-variable value="#[output application/json --- {}]" doc:name="systemInfo" doc:id="428d09ed-b9fe-4450-9ef4-2268085a23c6" variableName="systemInfo" />
+		<foreach doc:name="For Each" doc:id="f9bee8a8-940c-4093-9862-3a0633508e4f" collection="#[vars.systems]">
+			<set-variable value="#[payload]" doc:name="systemId" doc:id="59531c63-1ce6-4696-bc0b-0b1f47fc2f7f" variableName="systemId" />
+			<mft-config-sapi:get-system-by-id doc:name="Get system by id" doc:id="a93326c1-6dbb-4c0c-b257-f3e8b4cfcc6f" config-ref="MFT_Config_SAPI_Config" id="#[payload]" client-id="${secure::mft.config.client_id}" client-secret="${secure::mft.config.client_secret}" />
+			<set-variable value="#[vars.systemInfo ++ { (vars.systemId): payload }]" doc:name="systemInfo" doc:id="b7e7b4a1-73d4-4853-9160-ae9f84b16d2c" variableName="systemInfo" />
+		</foreach>
+		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	job: vars.job,
+	systemInfo: vars.systemInfo
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<flow-ref doc:name="create task" doc:id="7db40bdb-cef1-4e43-bf90-ebe5de30422b" name="post:\jobs\(id)\tasks:mft-job-papi-config" target="task"/>
+		<until-successful maxRetries="5" doc:name="Until Successful" doc:id="6feb08c2-d3a3-484f-988c-7771cfc1e2a6">
+			<anypoint-mq:publish doc:name="Publish" doc:id="ccd37c3f-21b1-4113-aa4d-cf2d75f716da" config-ref="Anypoint_MQ_Config" destination="mft-task-queue">
+					<anypoint-mq:properties><![CDATA[#[output application/java
+---
+{
+	"taskId" : vars.task.id
+}]]]></anypoint-mq:properties>
+				</anypoint-mq:publish>
+		</until-successful>
+		<ee:transform doc:name="Transform Message" doc:id="291c4baa-210a-42c5-8ad9-fee61222907c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.task]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>
