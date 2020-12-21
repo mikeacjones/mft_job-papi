@@ -1,4 +1,5 @@
 anypoint:
+  autodiscovery: "16540510"
   mq:
     client_id: "![aIx1NKr1Hl3IEnQWnxDXxMFDOWR6v2E86V/9jtldNu+QreCeY79g0w==]"
     client_secret: "![Wn5TnPGuu6WigTCe5QeGz48KHccJe3VtUaaS8+isAYoR7xwUFB8C2Q==]"

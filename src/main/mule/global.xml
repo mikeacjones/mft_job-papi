@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:mongo="http://www.mulesoft.org/schema/mule/mongo" xmlns:mft-config-sapi="http://www.mulesoft.org/schema/mule/mft-config-sapi"
-	xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq"
-	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:mongo="http://www.mulesoft.org/schema/mule/mongo"
+	xmlns:mft-config-sapi="http://www.mulesoft.org/schema/mule/mft-config-sapi"
+	xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
 http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd
 http://www.mulesoft.org/schema/mule/mft-config-sapi http://www.mulesoft.org/schema/mule/mft-config-sapi/current/mule-mft-config-sapi.xsd
-http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd">
+http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
 	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="ba66d084-bad2-4b5d-b462-0fd82cd72d2e" file="config/config.${env}.yaml" key="${securePropertiesKey}" >
 		<secure-properties:encrypt algorithm="Blowfish" />
 	</secure-properties:config>
@@ -19,4 +20,5 @@ http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mo
 	<mongo:config name="MongoDB_Config" doc:name="MongoDB Config" doc:id="f59ce0e9-6100-4ae3-a155-5b5e13a49147" >
 		<mongo:connection-string-connection connectionString="mongodb+srv://${secure::mongodb.username}:${secure::mongodb.password}@${secure::mongodb.host}/${secure::mongodb.db}?retryWrites=true&amp;w=majority" />
 	</mongo:config>
+	<api-gateway:autodiscovery apiId="${anypoint.autodiscovery}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="30a1acb7-a776-4e85-aecd-99972beba31e" flowRef="mft-job-papi-main" />
 </mule>

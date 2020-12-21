@@ -67,13 +67,6 @@
             <classifier>mule-plugin</classifier>
         </dependency>
     	<dependency>
-            <groupId>f8c4f898-332d-4206-b97a-29fc1ce40100</groupId>
-            <artifactId>mft-job-papi</artifactId>
-            <version>1.0.0</version>
-            <classifier>raml</classifier>
-            <type>zip</type>
-        </dependency>
-    	<dependency>
             <groupId>org.mule.modules</groupId>
             <artifactId>mule-apikit-module</artifactId>
             <version>1.3.16</version>
@@ -95,6 +88,19 @@
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-legacy</artifactId>
             <version>4.0.4</version>
+        </dependency>
+    	<dependency>
+            <groupId>org.mule.modules</groupId>
+            <artifactId>mule-validation-module</artifactId>
+            <version>1.4.0</version>
+            <classifier>mule-plugin</classifier>
+        </dependency>
+    	<dependency>
+            <groupId>f8c4f898-332d-4206-b97a-29fc1ce40100</groupId>
+            <artifactId>mft-job-papi</artifactId>
+            <version>1.0.3</version>
+            <classifier>raml</classifier>
+            <type>zip</type>
         </dependency>
     </dependencies>
 
