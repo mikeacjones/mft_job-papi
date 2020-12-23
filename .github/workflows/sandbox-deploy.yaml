@@ -1,0 +1,26 @@
+name: Sandbox - Build and Deploy
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  buildAndDeploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Build and deploy artifact to sandbox
+        run: mvn -B deploy -DmuleDeploy -s .maven/settings.xml
+        env:
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+          PLATFORM_USERNAME: ${{ secrets.PLATFORM_USERNAME }}
+          PLATFORM_PASSWORD: ${{ secrets.PLATFORM_PASSWORD }}
+          PLATFORM_CLIENT_ID: ${{ secrets.SANDBOX_PLATFORM_CLIENT_ID }}
+          PLATFORM_CLIENT_SECRET: ${{ secrets.SANDBOX_PLATFORM_CLIENT_SECRET }}
+          PLATFORM_BGI: ${{ secrets.PLATFORM_BGI }}
+          SECURE_PROPERTIES_KEY: ${{ secrets.SECURE_PROPERTIES_KEY }}
+          APP_NAME: "mft-job-papi"
+          PLATFORM_ENV: "Sandbox"
+          SETTINGS_ENV: "dev"
